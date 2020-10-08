@@ -1,8 +1,9 @@
+import 'package:boilerplate/ui/screens/hive_users.dart';
+import 'package:boilerplate/ui/screens/sql_users.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:boilerplate/models/core/app_context.dart';
 import 'package:boilerplate/models/core/base_model.dart';
-import 'package:boilerplate/services/device/deeplink_service.dart';
 import 'package:boilerplate/services/device/temperature_service.dart';
 import 'package:boilerplate/services/device/toast_service.dart';
 import 'package:boilerplate/ui/widgets/app_drawer.dart';
@@ -38,12 +39,29 @@ class Dashboard extends StatelessWidget {
                     color: Colors.white,
                   ),
                   RaisedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => new SQLUsers()));
+                    },
+                    child: Text("Test SQL", textAlign: TextAlign.center),
+                    color: Colors.white,
+                  ),
+                  RaisedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => new HiveUsers()));
+                    },
+                    child: Text("Test NoSQL", textAlign: TextAlign.center),
+                    color: Colors.white,
+                  ),
+                  RaisedButton(
                       onPressed: () async {
                         var result = await TemperatureService.initialize();
                         ToastService.showToast(
                             msg: (result ?? false)
                                 ? "Initialized sensor"
-                                : "Something went wrong!!");
+                                : "Something went wrong!!",
+                            backgroundColor: Colors.white);
                       },
                       child: Text("Initialize temperature sensor")),
                   StreamBuilder<double>(

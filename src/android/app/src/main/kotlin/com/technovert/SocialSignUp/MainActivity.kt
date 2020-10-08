@@ -12,6 +12,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.widget.TextView
@@ -24,6 +25,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import io.flutter.plugin.common.EventChannel
+import java.time.Duration
 
 class MainActivity: FlutterActivity(),EventChannel.StreamHandler, SensorEventListener {
     private val MethodChannel = "com.technovert.boilerplate/methodChannel";
@@ -53,8 +55,11 @@ class MainActivity: FlutterActivity(),EventChannel.StreamHandler, SensorEventLis
 
     fun initializeSensor() : Boolean{
         sensorManager = this.getSystemService(Context.SENSOR_SERVICE) as SensorManager;
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE)
-        sensorManager.registerListener(this, sensor,SensorManager.SENSOR_DELAY_NORMAL)
+      var tempSensor =sensorManager.getSensorList(Sensor.TYPE_AMBIENT_TEMPERATURE)
+       if(!tempSensor.isNullOrEmpty()) {
+           sensor = sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE)
+           sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+       }
         return true;
     }
 
@@ -62,77 +67,88 @@ class MainActivity: FlutterActivity(),EventChannel.StreamHandler, SensorEventLis
         when(call.method)
         {
             "initializeSensor" -> result.success(initializeSensor())
+            "listSensors" -> {
+                if(sensorManager!=null) {
+                    var sensors = sensorManager.getSensorList(Sensor.TYPE_ALL);
+                    result.success(sensors)
+                }
+            }
             "share" -> {
                 expectMapArguments(call);
                 share(call.argument<String>("title"), call.argument<String>("text"), call.argument<String>("subject"));
                 result.success(null)
             }
             "showToast" -> {
-                var mToast: Toast
                 expectMapArguments(call)
-                val mMessage = call.argument<Any>("msg").toString()
-                val length = call.argument<Any>("length").toString()
-                val gravity = call.argument<Any>("gravity").toString()
-                val bgcolor = call.argument<Number>("bgcolor")
-                val textcolor = call.argument<Number>("textcolor")
-                val textSize = call.argument<Number>("fontSize")
-                val mGravity: Int
-                mGravity = when (gravity) {
-                    "top" -> Gravity.TOP
-                    "center" -> Gravity.CENTER
-                    else -> Gravity.BOTTOM
-                }
-                val mDuration: Int
-                mDuration = if (length == "long") {
-                    Toast.LENGTH_LONG
-                } else {
-                    Toast.LENGTH_SHORT
-                }
-                if (bgcolor != null || textcolor != null || textSize != null) {
-                    val layout = (context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.toast_custom, null)
-                    val text = layout.findViewById<TextView>(R.id.text)
-                    text.text = mMessage
-                    val gradientDrawable: Drawable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        context.getDrawable(R.drawable.corner)!!
-                    } else {
-                        context.resources.getDrawable(R.drawable.corner)
-                    }
-                    if (bgcolor != null) {
-                        gradientDrawable.colorFilter = BlendModeColorFilter(bgcolor.toInt(), BlendMode.SRC)
-                    }
-                    text.background = gradientDrawable
-                    if (textSize != null) {
-                        text.textSize = textSize.toFloat()
-                    }
-                    if (textcolor != null) {
-                        text.setTextColor(textcolor.toInt())
-                    }
-                    mToast = Toast(context)
-                    mToast.duration = mDuration
-                    mToast.view = layout
-                } else {
-                    mToast = Toast.makeText(context, mMessage, mDuration)
-                }
-                when (mGravity) {
-                    Gravity.CENTER -> {
-                        mToast.setGravity(mGravity, 0, 0)
-                    }
-                    Gravity.TOP -> {
-                        mToast.setGravity(mGravity, 0, 100)
-                    }
-                    else -> {
-                        mToast.setGravity(mGravity, 0, 100)
-                    }
-                }
-                if (context is Activity) {
-                    (context as Activity).runOnUiThread { mToast.show() }
-                } else {
-                    mToast.show()
-                }
-                result.success(true)
+                showToast(call,result)
             }
             else ->  result.notImplemented()
         }
+    }
+
+    private fun showToast(call: MethodCall, result: MethodChannel.Result)
+    {
+        var mToast: Toast
+        val mMessage = call.argument<Any>("msg").toString()
+        val length = call.argument<Any>("length").toString()
+        val gravity = call.argument<Any>("gravity").toString()
+        val bgcolor = call.argument<Number>("bgcolor")
+        val textcolor = call.argument<Number>("textcolor")
+        val textSize = call.argument<Number>("fontSize")
+        val mGravity: Int
+        mGravity = when (gravity) {
+            "top" -> Gravity.TOP
+            "center" -> Gravity.CENTER
+            else -> Gravity.BOTTOM
+        }
+        val mDuration: Int
+        mDuration = if (length == "long") {
+            Toast.LENGTH_LONG
+        } else {
+            Toast.LENGTH_SHORT
+        }
+        if (bgcolor != null || textcolor != null || textSize != null) {
+            val layout = (context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater).inflate(R.layout.toast_custom, null)
+            val text = layout.findViewById<TextView>(R.id.text)
+            text.text = mMessage
+            val gradientDrawable: Drawable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                context.getDrawable(R.drawable.corner)!!
+            } else {
+                context.resources.getDrawable(R.drawable.corner)
+            }
+            if (bgcolor != null) {
+                gradientDrawable.colorFilter = BlendModeColorFilter(bgcolor.toInt(), BlendMode.SRC)
+            }
+            text.background = gradientDrawable
+            if (textSize != null) {
+                text.textSize = textSize.toFloat()
+            }
+            if (textcolor != null) {
+                text.setTextColor(textcolor.toInt())
+            }
+            mToast = Toast(context)
+            mToast.duration = mDuration
+            mToast.view = layout
+        } else {
+            mToast = Toast.makeText(context, mMessage, mDuration)
+        }
+        when (mGravity) {
+            Gravity.CENTER -> {
+                mToast.setGravity(mGravity, 0, 0)
+            }
+            Gravity.TOP -> {
+                mToast.setGravity(mGravity, 0, 100)
+            }
+            else -> {
+                mToast.setGravity(mGravity, 0, 100)
+            }
+        }
+        if (context is Activity) {
+            (context as Activity).runOnUiThread { mToast.show() }
+        } else {
+            mToast.show()
+        }
+        result.success(true)
     }
 
     @Throws(java.lang.IllegalArgumentException::class)

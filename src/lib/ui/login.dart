@@ -52,7 +52,7 @@ class LoginScreen extends StatelessWidget {
                                     color: Color(0xFF3D5A98),
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(6.0))),
-                                padding: EdgeInsets.fromLTRB(14, 0, 20, 0),
+                                // padding: EdgeInsets.fromLTRB(, 0, 20, 0),
                                 child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -82,7 +82,7 @@ class LoginScreen extends StatelessWidget {
                                     color: Color(0xFFf53e28),
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(6.0))),
-                                padding: EdgeInsets.fromLTRB(14, 0, 20, 0),
+                                // padding: EdgeInsets.fromLTRB(14, 0, 20, 0),
                                 child: Row(
                                     mainAxisSize: MainAxisSize.max,
                                     mainAxisAlignment: MainAxisAlignment.center,
